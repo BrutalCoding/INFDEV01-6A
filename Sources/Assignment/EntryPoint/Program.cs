@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace EntryPoint
 {
@@ -15,14 +16,18 @@ namespace EntryPoint
 
             var fullscreen = false;
             read_input:
-            switch (Microsoft.VisualBasic.Interaction.InputBox("Which assignment shall run next? (1, 2, 3, 4, or q for quit)", "Choose assignment", VirtualCity.GetInitialValue()))
+            switch (
+                Microsoft.VisualBasic.Interaction.InputBox(
+                    "Which assignment shall run next? (1, 2, 3, 4, or q for quit)", "Choose assignment",
+                    VirtualCity.GetInitialValue()))
             {
                 case "1":
                     using (var game = VirtualCity.RunAssignment1(SortSpecialBuildingsByDistance, fullscreen))
                         game.Run();
                     break;
                 case "2":
-                    using (var game = VirtualCity.RunAssignment2(FindSpecialBuildingsWithinDistanceFromHouse, fullscreen))
+                    using (
+                        var game = VirtualCity.RunAssignment2(FindSpecialBuildingsWithinDistanceFromHouse, fullscreen))
                         game.Run();
                     break;
                 case "3":
@@ -39,53 +44,71 @@ namespace EntryPoint
             goto read_input;
         }
 
-        static List<Vector2> sortedList = new List<Vector2>();
-        private static IEnumerable<Vector2> SortSpecialBuildingsByDistance(Vector2 house, IEnumerable<Vector2> specialBuildings)
+        private static Vector2 globalHouse { get; set; }
+        private static Vector2[] globalSpecialBuildings { get; set; }
+
+        private static IEnumerable<Vector2> SortSpecialBuildingsByDistance(Vector2 house,
+            IEnumerable<Vector2> specialBuildings)
         {
-            MergeSort(specialBuildings, 0, specialBuildings.Count());
-            return sortedList;
+            globalHouse = house;
+            globalSpecialBuildings = specialBuildings.ToArray();
+            MergeSort(globalSpecialBuildings, 0, globalSpecialBuildings.Length - 1);
+            return globalSpecialBuildings;
             //return specialBuildings.OrderBy(v => Vector2.Distance(v, house));
         }
 
-        private static void MergeSort(IEnumerable<Vector2> a, int left, int right)
+        private static void MergeSort(Vector2[] specialBuildings, int left, int right)
         {
-            List<Vector2> sortedList = new List<Vector2>();
-            if (left < right)
+            if (right > left)
             {
-                var mid = (left + right) / 2;
-                MergeSort(a, left, mid);
-                MergeSort(a, mid+ 1, right);
-                Merge(a, left, mid, right);
+                int mid = (right + left)/2;
+                MergeSort(specialBuildings, left, mid);
+                MergeSort(specialBuildings, (mid + 1), right);
+                Merge(specialBuildings, left, mid, right);
             }
         }
 
-        
-        private static IEnumerable<Vector2> Merge(IEnumerable<Vector2> a, int left, int mid, int right)
+        private static void Merge(Vector2[] specialBuildings, int left, int mid, int right)
         {
-            List<Vector2> sortedList = new List<Vector2>();
-            var n1 = mid - left + 1;
-            var n2 = right - mid;
-            Vector2[] leftArray = new Vector2[n1 + 1];
-            Vector2[] rightArray = new Vector2[n1 + 1];
-            List<Vector2> copyList = a.ToList();
-            for (int i = 1; i <= n1; i++)
+            int i, j, k;
+            int n1 = mid - left + 1;
+            int n2 = right - mid;
+            Vector2[] tempLeft = new Vector2[n1 + 1];
+            Vector2[] tempRight = new Vector2[n2 + 1];
+            for (i = 0; i < n1; i++)
             {
-                leftArray[i] = copyList[left + i - 1];
+                tempLeft[i] = specialBuildings[left + i];
             }
-            for (int i = 1; i <= n2; i++)
+
+            for (j = 0; j < n2; j++)
             {
-                rightArray[i] = copyList[left + i - 1];
+                tempRight[j] = specialBuildings[mid + j + 1];
             }
-            int leftIndex = 1;
-            int rightIndex = 1;
-            for (int x = left; x <= right; x++)
+
+            i = 0;
+            j = 0;
+            k = left;
+            for (k = left; k <= right; k++)
             {
-                //if (leftArray[leftIndex] < rightArray[rightIndex])
-                //{
-                    
-                //}
+                if (CalcDistanceOfHouse(tempLeft[i]) <= CalcDistanceOfHouse(tempRight[j]))
+                {
+                    specialBuildings[k] = tempLeft[i];
+                    i++;
+                }
+                else
+                {
+                    specialBuildings[k] = tempRight[j];
+                    j++;
+                }
             }
-            return sortedList;
+            globalSpecialBuildings = specialBuildings;
+        }
+
+        private static double CalcDistanceOfHouse(Vector2 specialBuilding)
+        {
+            var distance = Math.Sqrt(Math.Pow((globalHouse.X - specialBuilding.X), 2) + Math.Pow((globalHouse.Y - specialBuilding.Y), 2));
+            
+            return distance;
         }
 
         private static IEnumerable<IEnumerable<Vector2>> FindSpecialBuildingsWithinDistanceFromHouse(
