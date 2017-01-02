@@ -64,8 +64,8 @@ namespace EntryPoint
             //      from s in specialBuildings
             //      where Vector2.Distance(h.Item1, s) <= h.Item2
             //      select s;
-            Assignment2 a2 = new Assignment2(specialBuildings, housesAndDistances);
-            return null;
+            Assignment2 a2 = new Assignment2();
+            return a2.KDTree(specialBuildings, housesAndDistances);
         }
 
         private static IEnumerable<Tuple<Vector2, Vector2>> FindRoute(Vector2 startingBuilding,
@@ -169,66 +169,91 @@ namespace EntryPoint
     }
     public class Assignment2
     {
-        public Assignment2(IEnumerable<Vector2> specialBuildings,
-          IEnumerable<Tuple<Vector2, float>> housesAndDistances)
+        private ITree<Vector2> t;
+        public Assignment2()
         {
             //TODO: Telkens median pakken
-
             //Create empty tree
-            var t = new Empty<Vector2>() as ITree<Vector2>;
+            t = new Empty<Vector2>() as ITree<Vector2>;
 
-            //Insert the middle building
-            var medianIndex = specialBuildings.ToArray();
-            int middleArray = ((specialBuildings.Count() - 1) / 2);
-            t = Insert(t, medianIndex[middleArray]);
+            ////Insert the middle building
+            //var medianArray = specialBuildings.ToArray();
+            //int middleIndex = ((specialBuildings.Count() - 1) / 2);
+            //t = Insert(t, medianArray[middleIndex]);
 
-            //Remove the middle building from the list because it already inserted
-            List<Vector2> bla = specialBuildings.ToList();
-            bla.Remove(medianIndex[middleArray]);
+            ////Remove the middle building from the list because it already inserted
+            //List<Vector2> specialBuildingsCopy = specialBuildings.ToList();
+            //specialBuildingsCopy.Remove(medianArray[middleIndex]);
 
-            //Insert all the remaining buildings in the tree
-            foreach(var house in bla)
-            {
-                t = Insert(t, house);
-            }
+            ////Insert all the remaining buildings in the tree
+            //int medianIndex = middleIndex / 2;
+            
+            //Kdtree(specialBuildings.ToArray(), 0, specialBuildings.ToArray().Length);
         }
 
-        static bool checkVectorX = true;
-        static ITree<Vector2> Insert(ITree<Vector2> t, Vector2 v)
+        //public void Kdtree(Vector2[] specialBuildings, int start, int end)
+        //{
+        //    //Insert(t, specialBuildings.ToArray()[depth + 1]);
+        //    //Vector2[] test = specialBuildings.ToArray();
+
+        //    int mid = (start + end)/2;
+        //    Node<Vector2> Node = new Node<Vector2>(new Empty<Vector2>(), specialBuildings[mid], new Empty<Vector2>());
+
+        //    //X-X
+        //    if (Node.Value.X < t.Value.X)
+        //    {
+        //        Kdtree(specialBuildings, start, mid);
+        //        t = Insert(t, Node.Value);
+        //    }
+        //    else
+        //    {
+        //        Kdtree(specialBuildings, start, mid);
+        //        t = new Node<Vector2>(Insert(t.Left, t.Value, t.Right);
+        //    }
+
+        //    //Y-Y
+        //    if (Node.Value.Y < t.Value.Y)
+        //    {
+        //        Kdtree(specialBuildings, mid + 1, end);
+        //    }
+        //}
+
+        private static bool _checkVectorX = true;
+        private static ITree<Vector2> Insert(ITree<Vector2> t, Vector2 house)
         {
             if (t.IsEmpty)
-                return new Node<Vector2>(new Empty<Vector2>(), v, new Empty<Vector2>());
+                return new Node<Vector2>(new Empty<Vector2>(), house, new Empty<Vector2>());
 
-            if (t.Value == v)
+            if (t.Value == house)
                 return t;
 
-            if (checkVectorX)
+            if (_checkVectorX)
             {
-                checkVectorX = false;
-                if (v.X < t.Value.X)
+                _checkVectorX = false;
+                if (house.X < t.Value.X)
                 {
-                    return new Node<Vector2>(Insert(t.Left, v), t.Value, t.Right);
+                    return new Node<Vector2>(Insert(t.Left, house), t.Value, t.Right);
                 }
                 else
                 {
-                    return new Node<Vector2>(t.Left, t.Value, Insert(t.Right, v));
+                    return new Node<Vector2>(t.Left, t.Value, Insert(t.Right, house));
                 }
             }
             else
             {
-                checkVectorX = true;
-                if (v.Y < t.Value.Y)
+                _checkVectorX = true;
+                if (house.Y < t.Value.Y)
                 {
-                    return new Node<Vector2>(Insert(t.Left, v), t.Value, t.Right);
+                    return new Node<Vector2>(Insert(t.Left, house), t.Value, t.Right);
                 }
                 else
                 {
-                    return new Node<Vector2>(t.Left, t.Value, Insert(t.Right, v));
+                    return new Node<Vector2>(t.Left, t.Value, Insert(t.Right, house));
                 }
             }
         }
 
-        interface ITree<T>
+        private interface ITree<T>
         {
             bool IsEmpty { get; }
             T Value { get; }
@@ -271,7 +296,7 @@ namespace EntryPoint
             }
         }
 
-        class Node<T> : ITree<T>
+        private class Node<T> : ITree<T>
         {
             public bool IsEmpty
             {
@@ -293,6 +318,50 @@ namespace EntryPoint
                 Left = l;
                 Right = r;
             }
+        }
+
+        static double CalcDistanceOfHouse(Vector2 house, Vector2 specialBuilding)
+        {
+            double distance = Math.Sqrt(Math.Pow((house.X - specialBuilding.X), 2) + Math.Pow((house.Y - specialBuilding.Y), 2));
+
+            return distance;
+        }
+
+        static void SearchElement(ITree<Vector2> t, Tuple<Vector2, float> x, List<Vector2> bla )
+        {
+            if (!t.IsEmpty)
+            {
+                Console.WriteLine("Looking in " + t.Value);
+                if (CalcDistanceOfHouse(t.Value, x.Item1) < x.Item2)
+                {
+                    Console.WriteLine($"House {x.Item1} with as range {x.Item2} has special building {t.Value} inside it!");
+                    bla.Add(t.Value);
+                }
+                else
+                {
+                    SearchElement(t.Right, x, bla);
+                }
+            }
+        }
+
+        internal List<List<Vector2>> KDTree(IEnumerable<Vector2> specialBuildings,
+          IEnumerable<Tuple<Vector2, float>> housesAndDistances)
+        {
+            List<List<Vector2>> answer = new List<List<Vector2>>();
+            foreach (var house in specialBuildings)
+            {
+                t = Insert(t, house);
+            }
+
+
+            foreach (var house in housesAndDistances)
+            {
+                List<Vector2> bla = new List<Vector2>();
+                SearchElement(t, house, bla);
+                answer.Add(bla);
+            }
+
+            return answer;
         }
     }
 #endif
