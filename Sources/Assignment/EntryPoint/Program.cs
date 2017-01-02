@@ -58,12 +58,14 @@ namespace EntryPoint
           IEnumerable<Vector2> specialBuildings,
           IEnumerable<Tuple<Vector2, float>> housesAndDistances)
         {
-            return
-                from h in housesAndDistances
-                select
-                  from s in specialBuildings
-                  where Vector2.Distance(h.Item1, s) <= h.Item2
-                  select s;
+            //return
+            //    from h in housesAndDistances
+            //    select
+            //      from s in specialBuildings
+            //      where Vector2.Distance(h.Item1, s) <= h.Item2
+            //      select s;
+            Assignment2 a2 = new Assignment2(specialBuildings, housesAndDistances);
+            return null;
         }
 
         private static IEnumerable<Tuple<Vector2, Vector2>> FindRoute(Vector2 startingBuilding,
@@ -163,6 +165,134 @@ namespace EntryPoint
             var distance = Math.Sqrt(Math.Pow((GlobalHouse.X - specialBuilding.X), 2) + Math.Pow((GlobalHouse.Y - specialBuilding.Y), 2));
 
             return distance;
+        }
+    }
+    public class Assignment2
+    {
+        public Assignment2(IEnumerable<Vector2> specialBuildings,
+          IEnumerable<Tuple<Vector2, float>> housesAndDistances)
+        {
+            //TODO: Telkens median pakken
+
+            //Create empty tree
+            var t = new Empty<Vector2>() as ITree<Vector2>;
+
+            //Insert the middle building
+            var medianIndex = specialBuildings.ToArray();
+            int middleArray = ((specialBuildings.Count() - 1) / 2);
+            t = Insert(t, medianIndex[middleArray]);
+
+            //Remove the middle building from the list because it already inserted
+            List<Vector2> bla = specialBuildings.ToList();
+            bla.Remove(medianIndex[middleArray]);
+
+            //Insert all the remaining buildings in the tree
+            foreach(var house in bla)
+            {
+                t = Insert(t, house);
+            }
+        }
+
+        static bool checkVectorX = true;
+        static ITree<Vector2> Insert(ITree<Vector2> t, Vector2 v)
+        {
+            if (t.IsEmpty)
+                return new Node<Vector2>(new Empty<Vector2>(), v, new Empty<Vector2>());
+
+            if (t.Value == v)
+                return t;
+
+            if (checkVectorX)
+            {
+                checkVectorX = false;
+                if (v.X < t.Value.X)
+                {
+                    return new Node<Vector2>(Insert(t.Left, v), t.Value, t.Right);
+                }
+                else
+                {
+                    return new Node<Vector2>(t.Left, t.Value, Insert(t.Right, v));
+                }
+            }
+            else
+            {
+                checkVectorX = true;
+                if (v.Y < t.Value.Y)
+                {
+                    return new Node<Vector2>(Insert(t.Left, v), t.Value, t.Right);
+                }
+                else
+                {
+                    return new Node<Vector2>(t.Left, t.Value, Insert(t.Right, v));
+                }
+            }
+        }
+
+        interface ITree<T>
+        {
+            bool IsEmpty { get; }
+            T Value { get; }
+            ITree<T> Left { get; }
+            ITree<T> Right { get; }
+        }
+
+        class Empty<T> : ITree<T>
+        {
+            public bool IsEmpty
+            {
+                get
+                {
+                    return true;
+                }
+            }
+
+            public ITree<T> Left
+            {
+                get
+                {
+                    throw new NotImplementedException();
+                }
+            }
+
+            public ITree<T> Right
+            {
+                get
+                {
+                    throw new NotImplementedException();
+                }
+            }
+
+            public T Value
+            {
+                get
+                {
+                    throw new NotImplementedException();
+                }
+            }
+        }
+
+        class Node<T> : ITree<T>
+        {
+            public bool IsEmpty
+            {
+                get
+                {
+                    return false;
+                }
+            }
+
+            public ITree<T> Left { get; set; }
+
+            public ITree<T> Right { get; set; }
+
+            public T Value { get; set; }
+
+            public Node(ITree<T> l, T v, ITree<T> r)
+            {
+                Value = v;
+                Left = l;
+                Right = r;
+            }
         }
     }
 #endif
