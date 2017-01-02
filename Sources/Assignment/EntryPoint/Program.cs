@@ -219,38 +219,39 @@ namespace EntryPoint
         //}
 
         private static bool _checkVectorX = true;
-        private static ITree<Vector2> Insert(ITree<Vector2> t, Vector2 house)
+        private static ITree<Vector2> Insert(ITree<Vector2> t, Vector2 v)
         {
             if (t.IsEmpty)
-                return new Node<Vector2>(new Empty<Vector2>(), house, new Empty<Vector2>());
+                return new Node<Vector2>(new Empty<Vector2>(), v, new Empty<Vector2>());
 
-            if (t.Value == house)
+            if (t.Value == v)
                 return t;
 
-            if (_checkVectorX)
-            {
-                _checkVectorX = false;
-                if (house.X < t.Value.X)
-                {
-                    return new Node<Vector2>(Insert(t.Left, house), t.Value, t.Right);
-                }
-                else
-                {
-                    return new Node<Vector2>(t.Left, t.Value, Insert(t.Right, house));
-                }
-            }
-            else
-            {
-                _checkVectorX = true;
-                if (house.Y < t.Value.Y)
-                {
-                    return new Node<Vector2>(Insert(t.Left, house), t.Value, t.Right);
-                }
-                else
-                {
-                    return new Node<Vector2>(t.Left, t.Value, Insert(t.Right, house));
-                }
-            }
+            return new Node<Vector2>(t.Left, t.Value, Insert(t.Right, v));
+            //if (_checkVectorX)
+            //{
+            //_checkVectorX = false;
+            //if (v.X < t.Value.X)
+            //    {
+            //        return new Node<Vector2>(Insert(t.Left, v), t.Value, t.Right);
+            //    }
+            //    else
+            //    {
+            //        return new Node<Vector2>(t.Left, t.Value, Insert(t.Right, v));
+            //    }
+            //}
+            //else
+            //{
+            //    _checkVectorX = true;
+            //    if (v.Y < t.Value.Y)
+            //    {
+            //        return new Node<Vector2>(Insert(t.Left, v), t.Value, t.Right);
+            //    }
+            //    else
+            //    {
+            //        return new Node<Vector2>(t.Left, t.Value, Insert(t.Right, v));
+            //    }
+            //}
         }
 
         private interface ITree<T>
@@ -327,20 +328,17 @@ namespace EntryPoint
             return distance;
         }
 
-        static void SearchElement(ITree<Vector2> t, Tuple<Vector2, float> x, List<Vector2> bla )
+        static void SearchElement(ITree<Vector2> t, Tuple<Vector2, float> house, List<Vector2> housesWithFoundBuildings )
         {
             if (!t.IsEmpty)
             {
                 Console.WriteLine("Looking in " + t.Value);
-                if (CalcDistanceOfHouse(t.Value, x.Item1) < x.Item2)
+                if (CalcDistanceOfHouse(house.Item1, t.Value) <= house.Item2)
                 {
-                    Console.WriteLine($"House {x.Item1} with as range {x.Item2} has special building {t.Value} inside it!");
-                    bla.Add(t.Value);
+                    Console.WriteLine($"House {house.Item1} with as range {house.Item2} has special building {t.Value} inside it!");
+                    housesWithFoundBuildings.Add(t.Value);
                 }
-                else
-                {
-                    SearchElement(t.Right, x, bla);
-                }
+                SearchElement(t.Right, house, housesWithFoundBuildings);
             }
         }
 
@@ -356,9 +354,9 @@ namespace EntryPoint
 
             foreach (var house in housesAndDistances)
             {
-                List<Vector2> bla = new List<Vector2>();
-                SearchElement(t, house, bla);
-                answer.Add(bla);
+                List<Vector2> housesWithFoundBuildings = new List<Vector2>();
+                SearchElement(t, house, housesWithFoundBuildings);
+                answer.Add(housesWithFoundBuildings);
             }
 
             return answer;
