@@ -172,23 +172,7 @@ namespace EntryPoint
         private ITree<Vector2> t;
         public Assignment2()
         {
-            //TODO: Telkens median pakken
-            //Create empty tree
             t = new Empty<Vector2>() as ITree<Vector2>;
-
-            ////Insert the middle building
-            //var medianArray = specialBuildings.ToArray();
-            //int middleIndex = ((specialBuildings.Count() - 1) / 2);
-            //t = Insert(t, medianArray[middleIndex]);
-
-            ////Remove the middle building from the list because it already inserted
-            //List<Vector2> specialBuildingsCopy = specialBuildings.ToList();
-            //specialBuildingsCopy.Remove(medianArray[middleIndex]);
-
-            ////Insert all the remaining buildings in the tree
-            //int medianIndex = middleIndex / 2;
-            
-            //Kdtree(specialBuildings.ToArray(), 0, specialBuildings.ToArray().Length);
         }
 
         //public void Kdtree(Vector2[] specialBuildings, int start, int end)
@@ -228,30 +212,6 @@ namespace EntryPoint
                 return t;
 
             return new Node<Vector2>(t.Left, t.Value, Insert(t.Right, v));
-            //if (_checkVectorX)
-            //{
-            //_checkVectorX = false;
-            //if (v.X < t.Value.X)
-            //    {
-            //        return new Node<Vector2>(Insert(t.Left, v), t.Value, t.Right);
-            //    }
-            //    else
-            //    {
-            //        return new Node<Vector2>(t.Left, t.Value, Insert(t.Right, v));
-            //    }
-            //}
-            //else
-            //{
-            //    _checkVectorX = true;
-            //    if (v.Y < t.Value.Y)
-            //    {
-            //        return new Node<Vector2>(Insert(t.Left, v), t.Value, t.Right);
-            //    }
-            //    else
-            //    {
-            //        return new Node<Vector2>(t.Left, t.Value, Insert(t.Right, v));
-            //    }
-            //}
         }
 
         private interface ITree<T>
@@ -361,6 +321,11 @@ namespace EntryPoint
 
             return answer;
         }
+    }
+
+    public class Assignment3
+    {
+        
     }
 #endif
 }
